@@ -223,8 +223,14 @@ async def toggle_command(channel_login, command_id, bot_name):
     success = await change_activity(command_id, bot_name)
     command = await get_specific_command(bot_name, channel_login, command_id=command_id)
     if command:
+        if channel_login == "davex_gundyr":
+            port = 8000
+        elif channel_login == "emberedkeyblade":
+            port = 7000
+        else:
+            port = 0
         requests.post(
-            "http://localhost:8000/api/v1/update_commands",
+            f"http://localhost:{port}/api/v1/update_commands",
             json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
             timeout=5,
         )  # Tell the bot to update its cache
