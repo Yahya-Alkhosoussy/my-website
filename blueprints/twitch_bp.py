@@ -204,28 +204,47 @@ async def add_command(bot_name, channel_login):
     bot_id = await get_bot_id(bot_name)
     assert bot_id is not None
     success = await add_bot_commands(name, Reply, user_lvl, channel_login, bot_id)
+    requests.post(
+        "http://localhost:8000/api/v1/update_commands",
+        json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
+        timeout=5,
+    )  # Tell the bot to update its cache
     if success:
         return redirect(url_for("twitch.channel_dashboard", channel_login=channel_login, bot_name=bot_name))
     else:
         return render_template("dashboard/add_command_twitch.html", profile_image=profile_image, bot_name=bot_name)
 
 
-@twitch_bp.route("/dashboard/toggle-command/<command_id>/<bot_name>", methods=["POST"])
-async def toggle_command(command_id, bot_name):
+@twitch_bp.route("/dashboard/toggle-command/<channel_login>/<command_id>/<bot_name>", methods=["POST"])
+async def toggle_command(channel_login, command_id, bot_name):
     if "twitch_user" not in session:
         return {"Error": "Unauthorized"}, 401
 
     success = await change_activity(command_id, bot_name)
+    command = await get_specific_command(bot_name, channel_login, command_id=command_id)
+    if command:
+        requests.post(
+            "http://localhost:8000/api/v1/update_commands",
+            json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
+            timeout=5,
+        )  # Tell the bot to update its cache
     if success:
         return {"ok": True}, 200
     return {"error": "Failed to toggle"}, 500
 
 
-@twitch_bp.route("/dashboard/delete-command/<command_id>/<bot_name>", methods=["POST"])
-async def del_command(command_id, bot_name):
+@twitch_bp.route("/dashboard/delete-command/<channel_login>/<command_id>/<bot_name>", methods=["POST"])
+async def del_command(channel_login, command_id, bot_name):
     if "twitch_user" not in session:
         return {"Error": "Unauthorized"}, 401
 
+    command = await get_specific_command(bot_name, channel_login, command_id=command_id)
+    if command:
+        requests.post(
+            "http://localhost:8000/api/v1/delete_command",
+            json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
+            timeout=5,
+        )  # Tell the bot to update its cache
     success = await delete_command(command_id, bot_name)
     if success:
         return {"ok": True}, 200
@@ -261,6 +280,11 @@ async def edit_command(bot_name, channel_login, command_id):
     user_lvl = request.form.get("user_lvl", "")
     active = "active" in request.form
     success = await edit_specific_command(bot_name, name, command_id, Reply, user_lvl, bool(active))
+    requests.post(
+        "http://localhost:8000/api/v1/update_commands",
+        json={"name": name, "reply": Reply, "level": user_lvl, "active": active},
+        timeout=5,
+    )  # Tell the bot to update its cache
     if success:
         return redirect(url_for("twitch.channel_dashboard", channel_login=channel_login, bot_name=bot_name))
     else:
