@@ -32,9 +32,10 @@
         <script>
             document.querySelectorAll('.toggle-active').forEach(checkbox => {
                 checkbox.addEventListener('change', async function() {
+                    const channel_login = this.dataset.channelLogin;
                     const commandId = this.dataset.commandId;
                     const botName = this.dataset.botName;
-                    const response = await fetch(`/bot-management/twitch/dashboard/toggle-command/${commandId}/${botName}`, {
+                    const response = await fetch(`/bot-management/twitch/dashboard/toggle-command/${channel_login}/${commandId}/${botName}`, {
                         method: "POST",
                         headers: {'Content-Type': 'application/json'},
                     });
@@ -51,9 +52,10 @@
                 button.addEventListener('click', async function () {
                     const commandName = this.dataset.commandName;
                     if (!confirm(`Delete the ${commandName} command?`)) return;
+                    const channel_login = this.dataset.channelLogin;
                     const commandId = this.dataset.commandId;
                     const botName = this.dataset.botName;
-                    const response = await fetch(`/bot-management/twitch/dashboard/delete-command/${commandId}/${botName}`, {
+                    const response = await fetch(`/bot-management/twitch/dashboard/delete-command/${channel_login}/${commandId}/${botName}`, {
                         method: "POST",
                         headers: {'Content-Type': 'application/json'},
                     });
