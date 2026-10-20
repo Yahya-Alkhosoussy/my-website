@@ -183,6 +183,27 @@ async def channel_dashboard(bot_name, channel_login):
     )
 
 
+def get_user_level(everyone: bool, subscriber: bool, vip: bool, mods: bool):
+    if everyone:
+        return "everyone"
+    elif subscriber and not vip and not mods:
+        return "subscriber | broadcaster"
+    elif subscriber and vip and mods:
+        return "subscriber | vip | moderator | broadcaster"
+    elif subscriber and not vip and mods:
+        return "subscriber | moderator | broadcaster"
+    elif subscriber and vip and not mods:
+        return "subscriber | vip | broadcaster"
+    elif not subscriber and vip and mods:
+        return "vip | moderator | broadcaster"
+    elif not subscriber and vip and not mods:
+        return "vip | broadcaster"
+    elif not subscriber and not vip and mods:
+        return "moderator | broadcaster"
+    else:
+        return "broadcaster"
+
+
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>/add_command", methods=["GET", "POST"])
 async def add_command(bot_name, channel_login):
     if "twitch_user" not in session:
@@ -200,15 +221,35 @@ async def add_command(bot_name, channel_login):
     # POST SO PROCESS
     name = request.form.get("name", "")
     Reply = request.form.get("reply", "")
-    user_lvl = request.form.get("user_lvl", "")
+    everyone = bool(request.form.get("everyone", False))
+    subscriber = bool(request.form.get("subscriber", False))
+    vip = bool(request.form.get("VIP", False))
+    mods = bool(request.form.get("Moderator", False))
+
+    user_lvl = get_user_level(everyone, subscriber, vip, mods)
+
     bot_id = await get_bot_id(bot_name)
     assert bot_id is not None
     success = await add_bot_commands(name, Reply, user_lvl, channel_login, bot_id)
-    requests.post(
-        "http://localhost:8000/api/v1/update_commands",
-        json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
-        timeout=5,
-    )  # Tell the bot to update its cache
+
+    if channel_login == "davex_gundyr":
+        port = 8000
+    elif channel_login == "emberedkeyblade":
+        port = 7000
+    else:
+        port = 0
+
+    try:
+        requests.post(
+            f"http://localhost:{port}/api/v1/update_commands",
+            json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
+            timeout=5,
+        )  # Tell the bot to update its cache
+    except requests.exceptions.ConnectTimeout:
+        print("couldn't connect: wrong host/port or nothing listening")
+    except requests.exceptions.ReadTimeout:
+        print("connected, but the server never replied: handler hung or loop blocked")
+
     if success:
         return redirect(url_for("twitch.channel_dashboard", channel_login=channel_login, bot_name=bot_name))
     else:
@@ -270,6 +311,7 @@ async def edit_command(bot_name, channel_login, command_id):
         if details is None:
             return "Command not found", 400
         user_levels = ["Everyone", "Subscriber", "VIP", "Moderator", "Broadcaster"]
+        selected_user_levels = str(details[2]).strip().split(" | ")
         return render_template(
             "dashboard/edit_command_twitch.html",
             command_details=details,
@@ -278,12 +320,19 @@ async def edit_command(bot_name, channel_login, command_id):
             command_id=command_id,
             channel_login=channel_login,
             bot_name=bot_name,
+            user_level=selected_user_levels,
         )
 
     # POST so process
     name = request.form.get("name", "")
     Reply = request.form.get("reply", "")
-    user_lvl = request.form.get("user_lvl", "")
+    everyone = bool(request.form.get("everyone", False))
+    subscriber = bool(request.form.get("subscriber", False))
+    vip = bool(request.form.get("VIP", False))
+    mods = bool(request.form.get("Moderator", False))
+
+    user_lvl = get_user_level(everyone, subscriber, vip, mods)
+
     active = "active" in request.form
     success = await edit_specific_command(bot_name, name, command_id, Reply, user_lvl, bool(active))
     requests.post(
