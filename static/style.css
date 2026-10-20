@@ -535,3 +535,27 @@ form label {
     display:block;
     margin-bottom: 1rem;
 }
+
+#user-level-box {
+    display: flex;
+    width: 25rem;
+    flex-wrap: wrap;
+    margin: 3rem;
+    margin-right: 20rem;
+    justify-content: center;
+    align-items: center;
+}
+
+#user-level-small-box {
+    margin-right: 4rem;
+    margin-top: 1rem;
+    margin-left: 4rem;
+}
+
+#user-level-text {
+    display: flex;
+    justify-content: left;
+    align-items: left;
+    margin-right: 26rem;
+    margin-left: 3.8rem;
+}
