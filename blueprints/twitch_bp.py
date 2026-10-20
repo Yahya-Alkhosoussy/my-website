@@ -240,11 +240,12 @@ async def add_command(bot_name, channel_login):
         port = 0
 
     try:
-        requests.post(
-            f"http://localhost:{port}/api/v1/update_commands",
-            json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
-            timeout=5,
-        )  # Tell the bot to update its cache
+        if port != 0:
+            requests.post(
+                f"http://localhost:{port}/api/v1/update_commands",
+                json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
+                timeout=5,
+            )  # Tell the bot to update its cache
     except requests.exceptions.ConnectTimeout:
         print("couldn't connect: wrong host/port or nothing listening")
     except requests.exceptions.ReadTimeout:
@@ -270,11 +271,12 @@ async def toggle_command(channel_login, command_id, bot_name):
             port = 7000
         else:
             port = 0
-        requests.post(
-            f"http://localhost:{port}/api/v1/update_commands",
-            json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
-            timeout=5,
-        )  # Tell the bot to update its cache
+        if port != 0:
+            requests.post(
+                f"http://localhost:{port}/api/v1/update_commands",
+                json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
+                timeout=5,
+            )  # Tell the bot to update its cache
     if success:
         return {"ok": True}, 200
     return {"error": "Failed to toggle"}, 500
@@ -287,11 +289,18 @@ async def del_command(channel_login, command_id, bot_name):
 
     command = await get_specific_command(bot_name, channel_login, command_id=command_id)
     if command:
-        requests.post(
-            "http://localhost:8000/api/v1/delete_command",
-            json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
-            timeout=5,
-        )  # Tell the bot to update its cache
+        if channel_login == "davex_gundyr":
+            port = 8000
+        elif channel_login == "emberedkeyblade":
+            port = 7000
+        else:
+            port = 0
+        if port != 0:
+            requests.post(
+                f"http://localhost:{port}/api/v1/delete_command",
+                json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
+                timeout=5,
+            )  # Tell the bot to update its cache
     success = await delete_command(command_id, bot_name)
     if success:
         return {"ok": True}, 200
@@ -335,11 +344,19 @@ async def edit_command(bot_name, channel_login, command_id):
 
     active = "active" in request.form
     success = await edit_specific_command(bot_name, name, command_id, Reply, user_lvl, bool(active))
-    requests.post(
-        "http://localhost:8000/api/v1/update_commands",
-        json={"name": name, "reply": Reply, "level": user_lvl, "active": active},
-        timeout=5,
-    )  # Tell the bot to update its cache
+
+    if channel_login == "davex_gundyr":
+        port = 8000
+    elif channel_login == "emberedkeyblade":
+        port = 7000
+    else:
+        port = 0
+    if port != 0:
+        requests.post(
+            f"http://localhost:{port}/api/v1/update_commands",
+            json={"name": name, "reply": Reply, "level": user_lvl, "active": active},
+            timeout=5,
+        )  # Tell the bot to update its cache
     if success:
         return redirect(url_for("twitch.channel_dashboard", channel_login=channel_login, bot_name=bot_name))
     else:
