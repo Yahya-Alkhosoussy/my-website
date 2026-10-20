@@ -2,6 +2,7 @@ import os
 from functools import wraps
 
 import requests
+from dotenv import load_dotenv
 from flask import Blueprint, abort, redirect, render_template, request, session, url_for
 
 from database_interaction import (  # noqa
@@ -14,6 +15,8 @@ from database_interaction import (  # noqa
     get_custom_commands,
     get_react_roles_internal,
 )
+
+load_dotenv()
 
 discord_bp = Blueprint("discord", "discord", url_prefix="/bot-management/discord")
 
@@ -394,12 +397,17 @@ def _add_command(guild_id, bot_name):
     command_reply = request.form.get("command_reply", "").strip()
     command_mod_only = request.form.get("mod_only", "").strip()
     command_active = request.form.get("command_active", "").strip()
+    command_aliases = request.form.get("command_aliases", "").strip()
+
+    aliases = command_aliases.split(",")
+    if not aliases[0]:
+        aliases = None
 
     command = CustomCommand(
         None,
         command_name,
         command_reply,
-        None,
+        aliases,
         bool(command_mod_only),
         bool(command_active),
     )
