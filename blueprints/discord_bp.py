@@ -313,6 +313,7 @@ def add_react_role(guild_id, set_name, bot_name):
         success = add_role(role["name"], int(role_id), emoji_name, animated, emoji_id, set_name, guild["name"], guild_id)
 
     if success:
+        requests.post(f"http://localhost:1000/api/v1/update_react_roles/{guild_id}", timeout=5)
         return redirect(url_for("discord.manage_react_roles", guild_id=guild_id, bot_name=bot_name))
     return render_template(
         "dashboard/add_react_role.html",
