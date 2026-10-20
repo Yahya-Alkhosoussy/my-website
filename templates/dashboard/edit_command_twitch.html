@@ -37,7 +37,6 @@
     <form method="POST" action="{{ url_for('twitch.edit_command', command_id=command_id, channel_login=channel_login, bot_name=bot_name) }}">
         {% set name = command_details[0].replace("!", "") %}
         {% set reply = command_details[1] %}
-        {% set user_level = command_details[2] %}
         {% set active = command_details[4] %}
         <div id="form-div">
             <div class="switch-group" id="switch-check">
@@ -77,20 +76,100 @@
                 </script>
             </div>
 
-            <div>
+            {% set everyone=False %}
+            {% set sub=False %}
+            {% set vip=False %}
+            {% set mod=False %}
+            {% set streamer=False %}
+
+            {% if "everyone" in user_level %}
+                {% set everyone=True %}
+                {% set sub=True %}
+                {% set vip=True %}
+                {% set mod=True %}
+                {% set streamer=True %}
+            {% else %}
+                {% if "subscriber" in user_level %}
+                    {% set sub=True %}
+                {% endif %}
+                {% if "vip" in user_level %}
+                    {% set vip=True %}
+                {% endif %}
+                {% if "moderator" in user_level %}
+                    {% set mod=True %}
+                {% endif %}
+                {% if "broadcaster" in user_level %}
+                    {% set streamer=True %}
+                {% endif %}
+            {% endif %}
+
+            <div id="user-level-big-box">
                 <label id="user-level-text">
-                    User level:
+                    User Level:
                 </label>
-                <label>
-                    <select id="user-level-select" name="user_lvl" required>
-                        <option value="{{ user_level }}">{{ user_level }}</option>
-                        {% for level in user_lvls %}
-                            {% if level != user_level %}
-                                <option value="{{ level }}">{{ level }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
-                </label>
+                <div id="user-level-box">
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="everyone" id="everyone-box"
+                                {% if everyone %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Everyone</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="subscriber" id="sub-box"
+                                {% if sub %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Subscriber</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="VIP" id="vip-box"
+                                {% if vip %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>VIP</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="Moderator" id="mod-box"
+                                {% if mod %}checked {% endif %}>
+                            <span class="slider round"></span>
+                            <span>Moderator</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="Streamer" id="streamer-box"
+                                {% if streamer %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Streamer</span>
+                        </label>
+                    </div>
+                </div>
+                <script>
+                    const everyoneCheck = document.getElementById('everyone-box');
+                    const subCheck = document.getElementById('sub-box');
+                    const vipCheck = document.getElementById('vip-box');
+                    const modCheck = document.getElementById('mod-box');
+                    const streamerCheck = document.getElementById('streamer-box');
+                    everyoneCheck.addEventListener('change', (event) => {
+                        if (everyoneCheck.checked) {
+                            subCheck.checked = true;
+                            vipCheck.checked = true;
+                            modCheck.checked = true;
+                            streamerCheck.checked = true;
+                        }
+                    });
+
+                    [subCheck, vipCheck, modCheck, streamerCheck].forEach((box) => {
+                        box.addEventListener('change', () => {
+                            everyoneCheck.checked = subCheck.checked && vipCheck.checked && modCheck.checked && streamerCheck.checked;
+                        });
+                    });
+                </script>
             </div>
 
             <button id="submit-button" type="submit">Save</button>
