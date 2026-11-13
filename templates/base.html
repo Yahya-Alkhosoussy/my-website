@@ -101,6 +101,24 @@
                     this.closest('tr').remove();
                 })
             })
+
+            document.querySelectorAll('.toggle-active-standard').forEach(checkbox => {
+                checkbox.addEventListener('change', async function() {
+                    const channel_login = this.dataset.channelLogin;
+                    const commandId = this.dataset.commandId;
+                    const botName = this.dataset.botName;
+                    const response = await fetch(`/bot-management/twitch/dashboard/toggle-standard-command/${channel_login}/${commandId}/${botName}`, {
+                        method: "POST",
+                        headers: {'Content-Type': 'application/json'},
+                    });
+
+                    if (!response.ok) {
+                        // revert change if request failed
+                        this.checked = !this.checked;
+                        console.error('Failed to toggle command', commandId);
+                    }
+                });
+            });
         </script>
         {% endblock %}
     </body>
