@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Edit the {{ command_name }} command {% endblock %}
+
+{% block header_left %}
+    <span id="twitch_name">
+        {{ session.twitch_user.display_name }}
+    </span>
+    <img src="{{ profile_image }}" alt="{{ session.twitch_user.display_name }}" class="twitch_avatar">
+{% endblock %}
+
+{% block header_right %}
+    <header>
+        <div id="home-head">
+            <div>
+                <a class="top" href="{{ url_for('index') }}"> Home </a>
+            </div>
+            <div id="Portfolio">
+                <a class="top" href="{{ url_for('portfolio') }}"> Portfolio </a>
+            </div>
+            <div id="Bot-Management">
+                <a class="top" href="{{ url_for('bot_page') }}"> Bot Management </a>
+            </div>
+            <div id="Patreon">
+                <a class="top" href="https://www.patreon.com/cw/Spidercave">Patreon</a>
+            </div>
+            <div id="back">
+                <a class="top" href="{{ url_for('twitch.channel_dashboard', bot_name=bot_name, channel_login=channel_login)}}">Back</a>
+            </div>
+        </div>
+    </header>
+{% endblock %}
+
+{% block content %}
+    <h1 class="guild-name">{{ bot_name }}</h1>
+    <h2>Edit command: {{ command_details[0].replace("!", "") }}</h2>
+    <form method="POST" action="{{ url_for('twitch.edit_standard_command', command_id=command_id, channel_login=channel_login, bot_name=bot_name) }}">
+        {% set name = command_details[0].replace("!", "") %}
+        {% set reply = command_details[1] %}
+        {% set active = command_details[4] %}
+        <div id="form-div">
+            <div class="switch-group" id="switch-check">
+                <span>Command Active:</span>
+                <label class="switch">
+                    <input type="checkbox" name="active" {% if active %}checked{% endif %}>
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <div id="command-name-div">
+                <label id="command-name-text">
+                    Command Name: ('!' is added automatically)
+                </label>
+                <label>
+                    <input id="command-name" type="text" name="name" value="{{ name }}" required>
+                </label>
+            </div>
+
+            <div id="command-reply-div">
+                <label id="command-reply-text">
+                    Reply:
+                </label>
+                <label>
+                    <textarea id="command-reply" type="text" name="reply" required>{{ reply }}</textarea>
+                </label>
+                <span id="char-length">
+                    {{ reply|length }} / 484
+                </span>
+
+                <script>
+                    const replyField = document.getElementById('command-reply');
+                    const replyCharLength = document.getElementById('char-length');
+                    replyField.addEventListener('input', () => {
+                        replyCharLength.textContent = `${replyField.value.length} / 484`;
+                    })
+                </script>
+            </div>
+
+            {% set everyone=False %}
+            {% set sub=False %}
+            {% set vip=False %}
+            {% set mod=False %}
+            {% set streamer=False %}
+
+            {% if "everyone" in user_level %}
+                {% set everyone=True %}
+                {% set sub=True %}
+                {% set vip=True %}
+                {% set mod=True %}
+                {% set streamer=True %}
+            {% else %}
+                {% if "subscriber" in user_level %}
+                    {% set sub=True %}
+                {% endif %}
+                {% if "vip" in user_level %}
+                    {% set vip=True %}
+                {% endif %}
+                {% if "moderator" in user_level %}
+                    {% set mod=True %}
+                {% endif %}
+                {% if "broadcaster" in user_level %}
+                    {% set streamer=True %}
+                {% endif %}
+            {% endif %}
+
+            <div id="user-level-big-box">
+                <label id="user-level-text">
+                    User Level:
+                </label>
+                <div id="user-level-box">
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="everyone" id="everyone-box"
+                                {% if everyone %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Everyone</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="subscriber" id="sub-box"
+                                {% if sub %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Subscriber</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="VIP" id="vip-box"
+                                {% if vip %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>VIP</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="Moderator" id="mod-box"
+                                {% if mod %}checked {% endif %}>
+                            <span class="slider round"></span>
+                            <span>Moderator</span>
+                        </label>
+                    </div>
+                    <div id="user-level-small-box">
+                        <label class="switch">
+                            <input  type="checkbox" name="Streamer" id="streamer-box"
+                                {% if streamer %}checked{% endif %}>
+                            <span class="slider round"></span>
+                            <span>Streamer</span>
+                        </label>
+                    </div>
+                </div>
+                <script>
+                    const everyoneCheck = document.getElementById('everyone-box');
+                    const subCheck = document.getElementById('sub-box');
+                    const vipCheck = document.getElementById('vip-box');
+                    const modCheck = document.getElementById('mod-box');
+                    const streamerCheck = document.getElementById('streamer-box');
+                    everyoneCheck.addEventListener('change', (event) => {
+                        if (everyoneCheck.checked) {
+                            subCheck.checked = true;
+                            vipCheck.checked = true;
+                            modCheck.checked = true;
+                            streamerCheck.checked = true;
+                        }
+                    });
+
+                    [subCheck, vipCheck, modCheck, streamerCheck].forEach((box) => {
+                        box.addEventListener('change', () => {
+                            everyoneCheck.checked = subCheck.checked && vipCheck.checked && modCheck.checked && streamerCheck.checked;
+                        });
+                    });
+                </script>
+            </div>
+
+            <button id="submit-button" type="submit">Save</button>
+        </div>
+    </form>
+{% endblock %}
