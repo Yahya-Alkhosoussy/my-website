@@ -11,14 +11,18 @@ from twitch_database_interaction import (
     change_activity,
     delete_command,
     edit_specific_command,
+    edit_specific_standard_command,
     get_bot_commands,
     get_bot_id,
     get_bot_twitch_channels,
     get_bots,
     get_specific_command,
+    get_specific_standard_command,
+    get_standard_commands,
     get_user,
     is_user_in,
     save_twitch_token,
+    toggle_active_standard,
 )
 
 load_dotenv()
@@ -174,12 +178,20 @@ async def channel_dashboard(bot_name, channel_login):
         return redirect(url_for("dashboard", bot_name=bot_name))
     command_details = await get_bot_commands(bot_id=bot_id, streamer_login=channel_login)
 
+    active_tab = session.pop("active_tab", None) or request.args.get("tab", "commands")
+
+    print(active_tab)
+
+    standard_command_details = await get_standard_commands(channel_login, bot_name)
+
     return render_template(
         "twitch/commands_dashboard.html",
         channel_login=channel_login,
         command_details=command_details,
         profile_image=profile_image,
         bot_name=bot_name,
+        active_tab=active_tab,
+        standard_command_details=standard_command_details,
     )
 
 
@@ -202,6 +214,15 @@ def get_user_level(everyone: bool, subscriber: bool, vip: bool, mods: bool):
         return "moderator | broadcaster"
     else:
         return "broadcaster"
+
+
+def get_port(channel_login: str):
+    if channel_login == "davex_gundyr":
+        return 8000
+    elif channel_login == "emberedkeyblade":
+        return 7000
+    else:
+        return -1
 
 
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>/add_command", methods=["GET", "POST"])
@@ -232,15 +253,10 @@ async def add_command(bot_name, channel_login):
     assert bot_id is not None
     success = await add_bot_commands(name, Reply, user_lvl, channel_login, bot_id)
 
-    if channel_login == "davex_gundyr":
-        port = 8000
-    elif channel_login == "emberedkeyblade":
-        port = 7000
-    else:
-        port = 0
+    port = get_port(channel_login)
 
     try:
-        if port != 0:
+        if port != -1:
             requests.post(
                 f"http://localhost:{port}/api/v1/update_commands",
                 json={"name": name, "reply": Reply, "level": user_lvl, "active": False},
@@ -265,13 +281,8 @@ async def toggle_command(channel_login, command_id, bot_name):
     success = await change_activity(command_id, bot_name)
     command = await get_specific_command(bot_name, channel_login, command_id=command_id)
     if command:
-        if channel_login == "davex_gundyr":
-            port = 8000
-        elif channel_login == "emberedkeyblade":
-            port = 7000
-        else:
-            port = 0
-        if port != 0:
+        port = get_port(channel_login)
+        if port != -1:
             requests.post(
                 f"http://localhost:{port}/api/v1/update_commands",
                 json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
@@ -289,13 +300,8 @@ async def del_command(channel_login, command_id, bot_name):
 
     command = await get_specific_command(bot_name, channel_login, command_id=command_id)
     if command:
-        if channel_login == "davex_gundyr":
-            port = 8000
-        elif channel_login == "emberedkeyblade":
-            port = 7000
-        else:
-            port = 0
-        if port != 0:
+        port = get_port(channel_login)
+        if port != -1:
             requests.post(
                 f"http://localhost:{port}/api/v1/delete_command",
                 json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
@@ -307,7 +313,7 @@ async def del_command(channel_login, command_id, bot_name):
     return {"error": "Failed to delete"}, 500
 
 
-@twitch_bp.route("/twitch/dashboard/<bot_name>/<channel_login>/edit_command/<command_id>", methods=["GET", "POST"])
+@twitch_bp.route("/dashboard/<bot_name>/<channel_login>/edit_command/<command_id>", methods=["GET", "POST"])
 async def edit_command(bot_name, channel_login, command_id):
     if "twitch_user" not in session:
         return redirect(url_for("login"))
@@ -330,6 +336,7 @@ async def edit_command(bot_name, channel_login, command_id):
             channel_login=channel_login,
             bot_name=bot_name,
             user_level=selected_user_levels,
+            tab="commands",
         )
 
     # POST so process
@@ -345,13 +352,9 @@ async def edit_command(bot_name, channel_login, command_id):
     active = "active" in request.form
     success = await edit_specific_command(bot_name, name, command_id, Reply, user_lvl, bool(active))
 
-    if channel_login == "davex_gundyr":
-        port = 8000
-    elif channel_login == "emberedkeyblade":
-        port = 7000
-    else:
-        port = 0
-    if port != 0:
+    port = get_port(channel_login)
+
+    if port != -1:
         requests.post(
             f"http://localhost:{port}/api/v1/update_commands",
             json={"name": name, "reply": Reply, "level": user_lvl, "active": active},
@@ -369,4 +372,73 @@ async def edit_command(bot_name, channel_login, command_id):
             command_id=command_id,
             channel_login=channel_login,
             bot_name=bot_name,
+            tab="commands",
+        )
+
+
+@twitch_bp.route("/dashboard/toggle-standard-command/<channel_login>/<command_id>/<bot_name>", methods=["GET", "POST"])
+async def toggle_standard_command(channel_login, command_id, bot_name):
+    if "twitch_user" not in session:
+        return redirect(url_for("twitch.login"))
+
+    success = await toggle_active_standard(channel_login, command_id, bot_name=bot_name)
+
+    if success:
+        return {"ok": True}, 200
+    return {"error": "Failed to edit"}, 500
+
+
+@twitch_bp.route("/dashboard/<bot_name>/<channel_login>/edit_command/<command_id>/standard_command", methods=["GET", "POST"])
+async def edit_standard_command(bot_name, channel_login, command_id):
+    if "twitch_user" not in session:
+        return redirect(url_for("login"))
+    user = session["twitch_user"]
+    if not await get_user(user["login"]):
+        await add_user(username=user["login"], user_id=user["id"], access_token=session["twitch_token"], refresh_token=None)
+    profile_image = user["profile_image_url"]
+    details = await get_specific_standard_command(bot_name=bot_name, command_id=command_id)
+    if request.method == "GET":
+        if not details:
+            return "Command not found", 400
+        user_levels = ["Everyone", "Subscriber", "VIP", "Moderator", "Broadcaster"]
+        selected_user_levels = str(details[2]).strip().split(" | ")
+        return render_template(
+            "dashboard/edit_standard_command_twitch.html",
+            command_details=details,
+            profile_image=profile_image,
+            user_lvls=user_levels,
+            command_id=command_id,
+            channel_login=channel_login,
+            bot_name=bot_name,
+            user_level=selected_user_levels,
+            tab="standard commands",
+        )
+
+    name = request.form.get("name", "")
+    Reply = request.form.get("reply", "")
+    everyone = bool(request.form.get("everyone", False))
+    subscriber = bool(request.form.get("subscriber", False))
+    vip = bool(request.form.get("VIP", False))
+    mods = bool(request.form.get("Moderator", False))
+
+    user_lvl = get_user_level(everyone, subscriber, vip, mods)
+
+    active = "active" in request.form
+    success = await edit_specific_standard_command(bot_name, name, command_id, Reply, user_lvl, bool(active))
+
+    if success:
+        tab = "standard commands"
+        print(f"sending: {tab}")
+        return redirect(url_for("twitch.channel_dashboard", channel_login=channel_login, bot_name=bot_name, tab=tab))
+    else:
+        user_levels = ["Everyone", "Subscriber", "VIP", "Moderator", "Broadcaster"]
+        return render_template(
+            "dashboard/edit_command_twitch.html",
+            command_details=details,
+            profile_image=profile_image,
+            user_lvls=user_levels,
+            command_id=command_id,
+            channel_login=channel_login,
+            bot_name=bot_name,
+            tab="standard commands",
         )
