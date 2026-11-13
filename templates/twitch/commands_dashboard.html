@@ -49,56 +49,113 @@
         </span>
     </h1>
 
-    <h2>Edit commands:</h2>
-    <section class="role-mapping">
-        <a href="{{ url_for('twitch.add_command', channel_login=channel_login, bot_name=bot_name)}}" id="add_role">Add command</a>
-        {% if command_details %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Active</th>
-                        <th>Command</th>
-                        <th>Reply</th>
-                        <th>User Level</th>
-                        <th>Edit</th>
-                        <th>Delete</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for command in command_details %}
-                        {% set id = command[0] %}
-                        {% set name = command[1] %}
-                        {% set reply = command[2] %}
-                        {% set user_level = command[3] %}
-                        {% set active = command[4] %}
-                        <tr>
-                            <td>
-                                <label class="switch">
-                                    <input  type="checkbox"
-                                            class="toggle-active"
-                                            data-command-id="{{ id }}"
-                                            data-bot-name="{{ bot_name }}"
-                                            data-channel-login="{{ channel_login }}"
-                                            {% if active %}checked{% endif %}>
-                                    <span class="slider round"></span>
-                                </label>
-                            </td>
-                            <td>{{ name }}</td>
-                            <td>{{ reply }}</td>
-                            <td>{{ user_level }}</td>
-                            <td> <a href="{{ url_for('twitch.edit_command', channel_login=channel_login, command_id=id, bot_name=bot_name)}}" id="edit-command">Edit command</a> </td>
-                            <td>
-                                <button class="delete-command"
-                                        data-command-id="{{ id }}"
-                                        data-command-name="{{ name }}"
-                                        data-bot-name="{{ bot_name }}"
-                                        data-channel-login="{{ channel_login }}"
-                                        type="button">Delete</button>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <nav class="tabs">
+        <a href="{{ url_for('twitch.channel_dashboard', channel_login=channel_login, bot_name=bot_name, tab='commands')}}"
+            class="tab {% if active_tab == 'commands' %}active{% endif %}">Custom commands</a>
+        <a href="{{ url_for('twitch.channel_dashboard', channel_login=channel_login, bot_name=bot_name, tab='standard commands')}}"
+            class="tab {% if active_tab == 'standard commands' %}active{% endif %}">Standard commands</a>
+        <a href="{{ url_for('twitch.channel_dashboard', channel_login=channel_login, bot_name=bot_name, tab='sound alerts')}}"
+            class="tab {% if active_tab == 'sound alerts' %}active{% endif %}">Sound alerts</a>
+    </nav>
+
+    <div class="tab-content">
+        {% if active_tab == 'commands' %}
+            <section class="role-mapping">
+                <a href="{{ url_for('twitch.add_command', channel_login=channel_login, bot_name=bot_name)}}" id="add_role">Add command</a>
+                {% if command_details %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Active</th>
+                                <th>Command</th>
+                                <th>Reply</th>
+                                <th>User Level</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for command in command_details %}
+                                {% set id = command[0] %}
+                                {% set name = command[1] %}
+                                {% set reply = command[2] %}
+                                {% set user_level = command[3] %}
+                                {% set active = command[4] %}
+                                <tr>
+                                    <td>
+                                        <label class="switch">
+                                            <input  type="checkbox"
+                                                    class="toggle-active"
+                                                    data-command-id="{{ id }}"
+                                                    data-bot-name="{{ bot_name }}"
+                                                    data-channel-login="{{ channel_login }}"
+                                                    {% if active %}checked{% endif %}>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </td>
+                                    <td>{{ name }}</td>
+                                    <td>{{ reply }}</td>
+                                    <td>{{ user_level }}</td>
+                                    <td> <a href="{{ url_for('twitch.edit_command', channel_login=channel_login, command_id=id, bot_name=bot_name)}}" id="edit-command">Edit command</a> </td>
+                                    <td>
+                                        <button class="delete-command"
+                                                data-command-id="{{ id }}"
+                                                data-command-name="{{ name }}"
+                                                data-bot-name="{{ bot_name }}"
+                                                data-channel-login="{{ channel_login }}"
+                                                type="button">Delete</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </section>
         {% endif %}
-    </section>
+        {% if active_tab == 'standard commands' %}
+            <section class="role-mapping">
+                {% if standard_command_details %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Active</th>
+                                <th>Command</th>
+                                <th>Reply</th>
+                                <th>User Level</th>
+                                <th>Edit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for command in standard_command_details %}
+                                {% set id = command[0] %}
+                                {% set name = command[1] %}
+                                {% set reply = command[2] %}
+                                {% set user_level = command[3] %}
+                                {% set active = command[4] %}
+                                <tr>
+                                    <td>
+                                        <label class="switch">
+                                            <input  type="checkbox"
+                                                    class="toggle-active-standard"
+                                                    data-command-id="{{ id }}"
+                                                    data-bot-name="{{ bot_name }}"
+                                                    data-channel-login="{{ channel_login }}"
+                                                    {% if active %}checked{% endif %}>
+                                            <span class="slider round"></span>
+                                        </label>
+                                    </td>
+                                    <td>{{ name }}</td>
+                                    <td>{{ reply }}</td>
+                                    <td>{{ user_level }}</td>
+                                    <td> <a href="{{ url_for('twitch.edit_standard_command', channel_login=channel_login, command_id=id, bot_name=bot_name)}}" id="edit-command">Edit command</a> </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </section>
+        {% endif %}
+        {% if active_tab == 'sound alerts' %}
+        {% endif %}
+    </div>
 {% endblock %}
