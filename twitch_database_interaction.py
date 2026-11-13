@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 
 import aiosqlite
@@ -339,4 +338,81 @@ async def add_bot(bot_name: str, relative_path: Path):
         await conn.commit()
 
 
-asyncio.run(add_bot("Rotom", Path(__file__).parent.parent / "Rotom-chat-bot-logger" / "databases" / "commands.db"))
+async def get_standard_commands(streamer_name: str, bot_name: str = "", bot_id=0):
+    path = await get_bot_path(bot_name, bot_id)
+    if path is None:
+        print("path is none")
+        return False
+    async with aiosqlite.connect(path) as conn:
+        cur = await conn.execute(
+            "SELECT id, name, reply, user_level, active FROM standard_commands WHERE streamer=?", (streamer_name,)
+        )
+        results = await cur.fetchall()
+        ids: list[int] = []
+        names: list[str] = []
+        replies: list[str] = []
+        levels: list[str] = []
+        active: list[bool] = []
+        for result in results:
+            ids.append(result[0])
+            names.append(result[1])
+            replies.append(result[2])
+            levels.append(result[3])
+            active.append(result[4])
+
+    return list(zip(ids, names, replies, levels, active))
+
+
+async def toggle_active_standard(streamer_name: str, command_id: int = 0, command_name: str = "", bot_name: str = "", bot_id=0):
+    path = await get_bot_path(bot_name, bot_id)
+    if path is None:
+        print("Path is None")
+        return False
+    if command_id == 0 and command_name == "":
+        print("Command not specified")
+        return False
+
+    async with aiosqlite.connect(path) as conn:
+        if command_id:
+            await conn.execute("UPDATE standard_commands SET active=NOT active WHERE id=?", (command_id,))
+            await conn.commit()
+            return True
+        await conn.execute(
+            "UPDATE standard_commands SET active=NOT active WHERE streamer=? AND name=?", (streamer_name, command_name)
+        )
+        await conn.commit()
+        return True
+
+
+async def get_specific_standard_command(bot_name: str, command_id: int):
+    path = await get_bot_path(bot_name)
+    if path is None:
+        print("Path is None")
+        return False
+    async with aiosqlite.connect(path) as conn:
+        cur = await conn.execute("SELECT id, name, reply, user_level, active FROM standard_commands WHERE id=?", (command_id,))
+        result = await cur.fetchone()
+        if result is None:
+            raise LookupError("Could not find specific command.")
+        _id = int(result[0])
+        name = result[1]
+        reply = result[2]
+        level = result[3]
+        active = bool(result[4])
+        return (name, reply, level, _id, active)
+
+
+async def edit_specific_standard_command(
+    bot_name: str, command_name: str, command_id: int, command_reply: str, user_level: str, activity: bool
+):
+    path = await get_bot_path(bot_name=bot_name)
+    if path is None:
+        return None
+    async with aiosqlite.connect(path) as conn:
+        name = f"!{command_name}"
+        await conn.execute(
+            "UPDATE standard_commands SET name=?, reply=?, user_level=?, active=? WHERE id=?",
+            (name, command_reply, user_level, activity, command_id),
+        )
+        await conn.commit()
+        return True
