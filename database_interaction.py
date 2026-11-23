@@ -9,6 +9,7 @@ def get_requested_database(server_id: int, db_name: str) -> Path | None:
         1273776575266951268: "Shark-Bot",
         1412851365910286379: "FSAIHelper",
         1066090135839580231: "Shark-Bot",
+        822390788788060171: "pitch bot",
     }
 
     folder = server_dirs.get(int(server_id))
@@ -341,6 +342,12 @@ def get_command_by_id(guild_id: int, command_id: int):
     conn = sqlite3.connect(db_path)
     cur = conn.execute("SELECT active, name, reply, mod_only FROM commands WHERE id=?", (command_id,))
     result = cur.fetchone()
+    cur = conn.execute("SELECT alias FROM command_aliases WHERE command_id=?", (command_id,))
+    result_aliases = cur.fetchall()
+    aliases: list[str] = []
+    for alias in result_aliases:
+        aliases.append(alias[0])
+    print(aliases)
     return CustomCommand(
-        id=command_id, name=result[1].replace("!", ""), reply=result[2], aliases=None, mod_only=result[3], active=result[0]
+        id=command_id, name=result[1].replace("!", ""), reply=result[2], aliases=aliases, mod_only=result[3], active=result[0]
     )
