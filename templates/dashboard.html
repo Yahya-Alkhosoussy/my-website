@@ -16,12 +16,12 @@
                     <div class="no-icon">{{ guild.name[0] }}</div> <!-- First letter of the guild name as a fall back-->
                 {% endif %}
                 <p>{{ guild.name }}</p>
-                <p class="bot-tags">
+                <!-- <p class="bot-tags">
                     {% for bot in guild.bots_present %}
                         <span class="bot-tag">{{ bot }}</span>
                     {% endfor %}
-                </p>
-                <a href="{{ url_for('discord.manage_guild', guild_id=guild.id)}}">Manage</a>
+                </p> -->
+                <a href="{{ url_for('discord.manage_guild', guild_id=guild.id)}}" id="bot_link">Manage</a>
             </div>
         {% endfor %}
     </div>
