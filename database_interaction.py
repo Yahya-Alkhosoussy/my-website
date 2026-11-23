@@ -133,7 +133,9 @@ def put_emoji_in_table(db_path: Path, animated: bool, emoji_name: str, discord_i
         (animated, emoji_name.replace("\ufe0f", "").replace("\ufe0e", ""), discord_id),
     )
     conn.commit()
-    return cur.execute("SELECT id FROM emojis WHERE name=?", (emoji_name,)).fetchone()[0]
+    return cur.execute(
+        "SELECT id FROM emojis WHERE name=?", (emoji_name.replace("\ufe0f", "").replace("\ufe0e", ""),)
+    ).fetchone()[0]
 
 
 def put_guild_in_table(db_path: Path, guild_name: str, guild_id: int | None = None) -> int:
