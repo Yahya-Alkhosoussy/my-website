@@ -46,12 +46,37 @@ img {
 .guilds-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 50px;
     justify-content: center;
+    margin: 1rem auto 0;
 }
 
 .guild-card {
+    width: 250px;
+    min-height: 250px;
+    padding: 16px;
+    border: 0.25rem solid var(--primary);
+    border-radius: 8px;
+    background: var(--tertiary);
     text-align: center;
+    align-items: center;
+
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.guild img,
+.guild .no-icon {
+    flex-shrink: 0;
+}
+
+.guild-card p{
+    margin: 0.5rem 0;
+}
+
+.guild-card a{
+    margin-top: auto;
 }
 
 .tabs {
