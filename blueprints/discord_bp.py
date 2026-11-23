@@ -163,7 +163,6 @@ def dashboard():
     user = session["user"]
 
     mod_guilds = get_mod_guilds()
-    print(mod_guilds)
 
     bot_guilds = get_bot_guilds_names()
     assert mod_guilds
