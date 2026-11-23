@@ -67,6 +67,7 @@
                             <th>Command</th>
                             <th>Reply</th>
                             <th>Mod only</th>
+                            <th>Aliases</th>
                             <th>Edit</th>
                             <th>Delete</th>
                         </tr>
@@ -78,7 +79,6 @@
                             {% set reply = command.reply %}
                             {% set mod_only = command.mod_only %}
                             {% set active = command.active %}
-
                             <tr>
                                 <td>
                                     <label class="switch">
@@ -93,6 +93,7 @@
                                 <td>{{ name  }}</td>
                                 <td>{{ reply }}</td>
                                 <td>{{ mod_only }}</td>
+                                <td>{{ aliases }}</td>
                                 <td> <a href="{{ url_for('discord._edit_command', guild_id=guild.id, bot_name=bot_name, command_id=id)}}">Edit command</a></td>
                                 <td>
                                     <button class="delete-command-discord"
