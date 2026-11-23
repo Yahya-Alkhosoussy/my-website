@@ -129,7 +129,7 @@ async def logout():
 async def bot_select():
     session["single_bot"] = False
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     profile_image = user["profile_image_url"]
 
@@ -153,7 +153,7 @@ async def bot_select():
 async def dashboard(bot_name):
     session["single_channel"] = False  # here to init the object
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     profile_image = user["profile_image_url"]
     bot_channels = await get_bot_twitch_channels(bot_name)
@@ -170,7 +170,7 @@ async def dashboard(bot_name):
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>")
 async def channel_dashboard(bot_name, channel_login):
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     profile_image = user["profile_image_url"]
     bot_id = await get_bot_id(bot_name)
@@ -228,7 +228,7 @@ def get_port(channel_login: str):
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>/add_command", methods=["GET", "POST"])
 async def add_command(bot_name, channel_login):
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     if not await get_user(user["login"]):
         await add_user(
@@ -316,7 +316,7 @@ async def del_command(channel_login, command_id, bot_name):
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>/edit_command/<command_id>", methods=["GET", "POST"])
 async def edit_command(bot_name, channel_login, command_id):
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     if not await get_user(user["login"]):
         await add_user(username=user["login"], user_id=user["id"], access_token=session["twitch_token"], refresh_token=None)
@@ -391,7 +391,7 @@ async def toggle_standard_command(channel_login, command_id, bot_name):
 @twitch_bp.route("/dashboard/<bot_name>/<channel_login>/edit_command/<command_id>/standard_command", methods=["GET", "POST"])
 async def edit_standard_command(bot_name, channel_login, command_id):
     if "twitch_user" not in session:
-        return redirect(url_for("login"))
+        return redirect(url_for("twitch.login"))
     user = session["twitch_user"]
     if not await get_user(user["login"]):
         await add_user(username=user["login"], user_id=user["id"], access_token=session["twitch_token"], refresh_token=None)
