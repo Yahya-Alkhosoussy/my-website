@@ -26,9 +26,9 @@ CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("DISCORD_REDIRECT_URI")
 
 BOT_TOKENS: list[str] = []
-TOKEN_NAMES = ["SHARK_BOT_TOKEN", "SHARK_TEST_BOT_TOKEN", "NOTTSAIR_BOT_TEST"]
-BOT_NAMES = ["SHARK_BOT", "SHARK_TEST_BOT", "NOTTSAIR_TEST_BOT"]
-GUILD_NAMES = ["NottsAIR", "⊹˚₊⟡₊‧⁺˖ The Cult of Shark ˖⁺‧₊⟡₊˚⊹", "test server", "fruity server"]
+TOKEN_NAMES = ["SHARK_BOT_TOKEN", "SHARK_TEST_BOT_TOKEN", "NOTTSAIR_BOT_TEST", "PITCH_BOT_TOKEN"]
+BOT_NAMES = ["SHARK_BOT", "SHARK_TEST_BOT", "NOTTSAIR_TEST_BOT", "PITCH_BOT"]
+GUILD_NAMES = ["NottsAIR", "⊹˚₊⟡₊‧⁺˖ The Cult of Shark ˖⁺‧₊⟡₊˚⊹", "test server", "<(ゝ◡╹)>"]
 for name in TOKEN_NAMES:
     token = os.getenv(name)
     if token:
@@ -163,6 +163,7 @@ def dashboard():
     user = session["user"]
 
     mod_guilds = get_mod_guilds()
+    print(mod_guilds)
 
     bot_guilds = get_bot_guilds_names()
     assert mod_guilds
