@@ -75,7 +75,7 @@ async def callback():
         headers={
             "Authorization": f"Bearer {token}",
             "Client-Id": TWITCH_CLIENT_ID,
-        },
+        },  # pyright: ignore[reportArgumentType]
     ).json()
 
     user = user_response["data"][0]
@@ -83,7 +83,7 @@ async def callback():
     moderated = requests.get(
         "https://api.twitch.tv/helix/moderation/channels",
         params={"user_id": user["id"]},
-        headers={"Authorization": f"Bearer {token}", "Client-Id": TWITCH_CLIENT_ID},
+        headers={"Authorization": f"Bearer {token}", "Client-Id": TWITCH_CLIENT_ID},  # pyright: ignore[reportArgumentType]
     ).json()
 
     moderated_channels = [
@@ -302,11 +302,14 @@ async def del_command(channel_login, command_id, bot_name):
     if command:
         port = get_port(channel_login)
         if port != -1:
-            requests.post(
-                f"http://localhost:{port}/api/v1/delete_command",
-                json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
-                timeout=5,
-            )  # Tell the bot to update its cache
+            try:
+                requests.post(
+                    f"http://localhost:{port}/api/v1/delete_command",
+                    json={"name": command[0], "reply": command[1], "level": command[2], "active": command[4]},
+                    timeout=5,
+                )  # Tell the bot to update its cache
+            except Exception as e:
+                print(e)  # the bot is not running
     success = await delete_command(command_id, bot_name)
     if success:
         return {"ok": True}, 200
